@@ -62,15 +62,8 @@ final class Freemius_WebHook_Listener {
      */
     protected static function mailchimp() {
 
-        // Retrieve the request's body and parse it as JSON
+        // Retrieve the request's body
         $input = @file_get_contents("php://input");
-
-        $event_json = json_decode($input);
-
-        if ( ! isset( $event_json->id ) ) {
-            http_response_code(200);
-            exit;
-        }
 
         /**
          * Freemius PHP SDK can be downloaded from GitHub:
@@ -80,14 +73,20 @@ final class Freemius_WebHook_Listener {
 
         extract( self::$plugin );
 
-        $fs = new Freemius_Api(
-            $type,
-            $id,
-            $public_key,
-            $secret_key
-        );
+        // Verify the authenticity of the request.
+        $hash = hash_hmac('sha256', $input, $secret_key);
 
-        $fs_event = $fs->Api("/events/{$event_json->id}.json");
+        $signature = $_SERVER['HTTP_X_SIGNATURE'] ?? '';
+
+        if ( ! hash_equals($hash, $signature))
+        {
+            // Invalid signature, don't expose any data to attackers.
+            http_response_code(200);
+            exit;
+        }
+
+        // Decode the request.
+        $fs_event = json_decode($input);
 
         $user  = $fs_event->objects->user;
 
