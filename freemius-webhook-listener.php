@@ -65,12 +65,6 @@ final class Freemius_WebHook_Listener {
         // Retrieve the request's body
         $input = @file_get_contents("php://input");
 
-        /**
-         * Freemius PHP SDK can be downloaded from GitHub:
-         * https://github.com/Freemius/php-sdk
-         */
-        require_once dirname(__FILE__) . '/includes/freemius/includes/sdk/Freemius.php';
-
         extract( self::$plugin );
 
         // Verify the authenticity of the request.
